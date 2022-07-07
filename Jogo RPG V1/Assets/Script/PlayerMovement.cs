@@ -1,48 +1,67 @@
 using System.Collections;
 using System.Collections.Generic;
+using System;
 using UnityEngine;
+using UnityEngine.Tilemaps;
 
 public class PlayerMovement : MonoBehaviour
 {
+<<<<<<< Updated upstream
     private bool isMoving;
     private Vector3 origPos, targetPos;
     private float timeToMove = 0.2f;
    
+=======
+    public float moveSpeed = 5;
+    private bool walking;
 
-    // Update is called once per frame
+    private Rigidbody2D rb;
+
+    private Vector2 movement;
+    private Vector3 moveToPosition;
+
+    public Tilemap obstacles;
+
+    void Start()
+    {
+        rb = GetComponent<Rigidbody2D>();
+    }
+>>>>>>> Stashed changes
+
     void Update()
     {
-        if (Input.GetKey(KeyCode.W) && !isMoving)
-            StartCoroutine(MovePlayer(Vector3.up));
+        if (!walking)
+        {
+            movement.x = Input.GetAxis("Horizontal");
+            movement.y = Input.GetAxis("Vertical");
+        }
 
-        if (Input.GetKey(KeyCode.A) && !isMoving)
-            StartCoroutine(MovePlayer(Vector3.left));
+        if (movement.x != 0)
+        {
+            movement.y = 0;
+        }
 
-        if (Input.GetKey(KeyCode.S) && !isMoving)
-            StartCoroutine(MovePlayer(Vector3.down));
+        moveToPosition = transform.position + new Vector3(movement.x, movement.y, 0);
+        Vector3Int obstacleMapTile = obstacles.WorldToCell(moveToPosition - new Vector3(0, 0.5f, 0));
 
-        if (Input.GetKey(KeyCode.D) && !isMoving)
-            StartCoroutine(MovePlayer(Vector3.right));
+        if (obstacles.GetTile(obstacleMapTile) == null)
+        {
+            StartCoroutine(Move(moveToPosition));
+        }
     }
 
-    private IEnumerator MovePlayer(Vector3 direction)
+    IEnumerator Move(Vector3 newPos)
     {
-        isMoving = true;
+        walking = true;
 
-        float elapsedTime = 0;
-        origPos = transform.position;
-        targetPos = origPos + direction;
-
-        while(elapsedTime < timeToMove)
+        while ((newPos - transform.position).sqrMagnitude > Mathf.Epsilon)
         {
-            transform.position = Vector3.Lerp(origPos, targetPos, (elapsedTime / timeToMove));
-            elapsedTime += Time.deltaTime;
+            transform.position = Vector3.MoveTowards(transform.position, newPos, moveSpeed * Time.deltaTime);
             yield return null;
         }
 
-        transform.position = targetPos;
+        transform.position = newPos;
 
-        isMoving = false;
+        walking = false;
     }
-    
 }
